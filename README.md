@@ -1,3 +1,3 @@
-# APSS
-Project file
+# AHSS-TEAM
+Final year project file
 
