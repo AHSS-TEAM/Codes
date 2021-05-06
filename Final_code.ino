@@ -25,16 +25,18 @@ static const uint32_t GPS_baud_rate = 9600; //baudrate
 int satellite_count = 0; //number of satellites
 int path_angle, heading_angle, path_distance;
 int x,y,z,azimuth;
-float flat=12.34567, flon=77.12657;
+float lat_value[]={};
+float long_value[]={};
+int lat_value_length = sizeof(lat_value)/sizeof(lat_value[0]);
 
 void setup()
 {
   pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
+  pinMode(3, OUTPUT); 
   pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
+  pinMode(5, OUTPUT); 
+  pinMode(9, OUTPUT); //pwm1
+  pinMode(10, OUTPUT); //pwm2
   
   Serial.begin(GPS_baud_rate);
   Wire.begin();
@@ -91,20 +93,26 @@ int compass_heading_angle()
 int gps_path_angle()
 {
     gps_data();
-    path_angle = TinyGPSPlus::courseTo(gps.location.lat(),gps.location.lng(),flat,flon);
-    Serial.print("path angle: ");
-    Serial.println(path_angle);
-    Serial.println(TinyGPSPlus::cardinal(path_angle));
-    return path_angle;
+    for (int i=0; i<lat_value_length; i++)
+    {
+      path_angle = TinyGPSPlus::courseTo(gps.location.lat(),gps.location.lng(),lat_value[i],long_value[i]);
+      Serial.print("path angle: ");
+      Serial.println(path_angle);
+      Serial.println(TinyGPSPlus::cardinal(path_angle));
+      return path_angle;
+    }
 }
 
 int distance_between_waypoint()
 {
     gps_data();
-    path_distance = TinyGPSPlus::distanceBetween(gps.location.lat(),gps.location.lng(),flat,flon);
-    Serial.print("path angle: ");
-    Serial.println(path_distance);
-    return path_distance;
+    for (int i=0; i<lat_value_length; i++)
+    {
+      path_distance = TinyGPSPlus::distanceBetween(gps.location.lat(),gps.location.lng(),lat_value[i],long_value[i]);
+      Serial.print("path angle: ");
+      Serial.println(path_distance);
+      return path_distance;
+    }
 }
 
 void traverse_to_waypoint()
@@ -215,4 +223,3 @@ void idle()
     digitalWrite(5, LOW);
         
 }
-
