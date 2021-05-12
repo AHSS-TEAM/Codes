@@ -56,7 +56,7 @@ void sensorUpdate()
     Serial.print(F("failed to read sensor"));
     return;
   }
-  if (Firebase.setFloat(firebaseData, "/praj/cm", r)) {
+  if (Firebase.setFloat(firebaseData, "liquid_level", r)) {
     Serial.println("PASSED");
     Serial.println("PATH:" + firebaseData.dataPath());
     Serial.println("type:" + firebaseData.dataType());
