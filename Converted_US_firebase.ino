@@ -1,18 +1,18 @@
-#include <ESP8266WiFi.h>
-#include "FirebaseESP8266.h"
+/*Imports*/
+#include <ESP8266WiFi.h> //Library to work on NodeMCU
+#include "FirebaseESP8266.h" //Library to send the data from USensor to google firebase
 
-#define FIREBASE_HOST "ahss-de7a2-default-rtdb.firebaseio.com"
-#define FIREBASE_AUTH "e975CHCtEW9X46tlVsqcF0mbKYZC8kMF0zyxs778"
+/*Pre-requisites*/
+#define FIREBASE_HOST "ahss-de7a2-default-rtdb.firebaseio.com" //Firebase project URL
+#define FIREBASE_AUTH "e975CHCtEW9X46tlVsqcF0mbKYZC8kMF0zyxs778" //Firebase project secret key 
+#define WIFI_SSID "Enter your wifi ssid" //Your wifi name
+#define WIFI_PASSWORD "Enter your password" //your wifi password
+FirebaseData firebaseData; //Firebase object
 
-#define WIFI_SSID "Your wifi name"
-#define WIFI_PASSWORD "your wifi password"
+const int trigPin = D5; //Usensor trigger pin 
+const int echoPin = D6; //Usensor Echo pin
 
-FirebaseData firebaseData;
-
-int trigPin = D5;
-int echoPin = D6;
-
-const int tank_height = 20;
+const int tank_height = 10; //Height of the fuel tank
 
 void setup()
 {
@@ -28,49 +28,53 @@ void setup()
     delay (100);
     
   }
-
   Serial.println ();
   Serial.print ("Connected with IP");
   Serial.println (WiFi.localIP ());
   Serial.println ();
-  Firebase.begin (FIREBASE_HOST, FIREBASE_AUTH);
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   Firebase.reconnectWiFi(true);
 }
-void loop() {
-  sensorUpdate();
+
+void loop() 
+{
+  sensorUpdate(); //A funtion call to calculate the fuel level
 }
+
 void sensorUpdate()
 {
-  long d, r, x;
+ long d, r, x;
   digitalWrite(trigPin, LOW);
   delay(2000);
   digitalWrite(trigPin, HIGH);
-  delay(1000);
+  delay(2000);
   digitalWrite(trigPin, LOW);
-  d = pulseIn(echoPin, HIGH);
-  x = (tank_height - ((d / 2) / 29.1));
-  r = x * 75;
-  
-  
-  Serial.print(r );
-  Serial.println("mL");
-  if (isnan(r)) {
-    Serial.print(F("failed to read sensor"));
-    return;
+  d = pulseIn(echoPin, HIGH); //actual distance
+  x = (d / 2) / 29.1;
+  float dummy = (x-2);
+  float m = (tank_height - dummy);
+  if(m<=0 || m >10)
+  {
+    Serial.print("0");
   }
+  float  t = m * 65;
+  r = (t/650)*100; // percentage conversion
+  Serial.print(r);
+  Serial.print("%");
+  Serial.println();
+  
+  //Transmitting data to Firebase after calculation
   if (Firebase.setFloat(firebaseData, "liquid_level", r)) {
     Serial.println("PASSED");
     Serial.println("PATH:" + firebaseData.dataPath());
     Serial.println("type:" + firebaseData.dataType());
     Serial.println("PATH:" + firebaseData.ETag());
-    //Serial.println(-------------------);
     Serial.println();
   }
   else
   {
     Serial.println("FAILED");
     Serial.println("REASON:" + firebaseData.errorReason());
-    //Serial.println(-------------------);
     Serial.println();
   }
 }
